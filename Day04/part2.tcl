@@ -34,9 +34,6 @@ proc is_x_mas {grid i j} {
 }
 
 
-# Brute force.
-#    - locate each X in the grid.
-#    - for each X, check the three neighbors for M-A-S
 set count 0
 foreach {i row} [enumerate $grid] {
     foreach {j letter} [enumerate $row] {
