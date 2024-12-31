@@ -13,7 +13,6 @@ source ../aoc_library.tcl
 
 
 proc init_grid {file} {
-    global grid loc dir 
 
     set data [exec cat $file]
     set lines [split $data "\n"]
@@ -22,9 +21,12 @@ proc init_grid {file} {
     set grid [make_grid_from_lines $lines]
 
     set loc [find_start_loc $grid]
+    
+    # Replace starting "^" with a "X"
+    lset grid {*}$loc "X"
     set dir {-1 0}
 
-    return $grid
+    return [list $grid $loc $dir]
 }
 
 proc find_start_loc {grid} {
@@ -35,8 +37,10 @@ proc find_start_loc {grid} {
 }
 
 # Move the guard one step:
-proc move_one_step {"verbose 0"} {
-    global grid loc dir visited
+proc move_one_step {grid_var loc_var dir_var "verbose 0"} {
+    upvar $grid_var grid
+    upvar $loc_var  loc
+    upvar $dir_var  dir
 
     # Plan the next location
     set next_loc  [+ $loc $dir]
@@ -62,16 +66,11 @@ proc move_one_step {"verbose 0"} {
     # Check if you've been here before in the same direction
     #   - if not, then mark the grid with the direction ^, v, < or >
     if {$next_char eq $dir_char} {
-        puts ""
-        puts "Infinite loop"
         # print_grid $grid
         return "1"
     } else {
         set loc $next_loc
         lset grid {*}$loc $dir_char
-        if {$loc ni $visited} {
-            lappend visited $loc
-        }
     }
 
     if {$verbose} {
@@ -90,60 +89,73 @@ proc map_dir_to_char {dir} {
     }
 }
 
-# The move_one_step proc uses (perhaps unwisely) global variables
-proc move_guard {} {
+proc part2 {} {
+    # set input_file demo.txt
+    set input_file input.txt
 
+    # Initialize and save grid
+    lassign [init_grid $input_file] grid loc dir
+    set start_loc $loc
+
+    set num_inf_loops 0
+    set obstacle_skip_locs [dict create]
+    dict set obstacle_skip_locs $start_loc 1
     while {1} {
-        # status 0: out of bounds
-        # status 1: infinite loop
-        # status 2: keep going
-        set move_status [move_one_step]
-        if {$move_status in "0 1"} {
-            return $move_status
+        # Make a copy of the current state of the grid
+        set what_if_grid $grid
+        set what_if_loc  $loc
+        set what_if_dir  $dir
+
+        # Look ahead one step.   
+        #   - If out of bounds, stop.
+        set obs_loc   [+ $what_if_loc $what_if_dir]
+        set next_char [lindex $what_if_grid {*}$obs_loc]
+
+        if {$next_char eq ""} {
+            puts "Main loop out of bounds"
+            break
+        } elseif {$next_char eq "#"} {
+            set what_if_dir  [* $what_if_dir "0 -1"]
+            set obs_loc      [+ $what_if_loc $what_if_dir]
+        } 
+
+        if {[dict exists $obstacle_skip_locs $obs_loc]} {
+            # Do nothing.  Cannot put an obstacle at start or a place previously tested.
+        } else {
+            # Place an obstacle in the what-if grid and run test.
+            dict set obstacle_skip_locs $obs_loc 1
+            lset what_if_grid {*}$obs_loc "O"
+            while {1} {
+                # 0: out of bounds
+                # 1: infinite what_if
+                # 2: keep going
+                set move_status [move_one_step what_if_grid what_if_loc what_if_dir]
+                if {$move_status == 0} {
+                    # out of bounds
+                    break 
+                } elseif {$move_status == 1} {
+                    # infinite loop
+                    incr num_inf_loops 
+                    puts "-----------------------------"
+                    puts "Infinite loop $num_inf_loops"
+                    # print_grid $what_if_grid
+                    break
+                }
+            }
         }
-    }
-}
 
-#### initialize global variables
-# set input_file demo.txt
-set input_file input.txt
+        # Take one step in the main loop's grid
+        set move_status [move_one_step grid loc dir]
+        if {$move_status in "0 1"} {
+            break
+        }
 
-
-set grid [init_grid $input_file]
-set start_loc $loc
-set start_dir [complex -1 0]
-set orig_grid $grid
-set visited [list]
-
-# Do initial solution without any additional obstruction
-move_guard 
-
-# For each visited location, see if an obstacle leads to infinite loop
-set infinite_obs_locs 0
-foreach {i obs_loc} [enumerate $visited 1] {
-    if {$obs_loc == $start_loc} {
-        continue
     }
 
-    # Rewind to original conditions
-    set grid $orig_grid
-    set loc  $start_loc
-    set dir  $start_dir
-    
-    # Add the objstacle
-    lset grid {*}$obs_loc "O"
-
-    # [move_guard] will return 1 for an infinite loop
-    incr infinite_obs_locs [move_guard]
-    puts ""
-    puts "#### $i:  $infinite_obs_locs #####"
-    # print_grid $grid
-    # if {$infinite_obs_locs == 1} {
-        # break
-    # }
+    puts "Part2 answer = $num_inf_loops"
 }
-puts "Part2 answer = $infinite_obs_locs"
-    
+
+time {part2}
 
 
 
