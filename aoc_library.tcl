@@ -343,6 +343,14 @@ proc lcm {p q} {
     }
 }
 
+# From   https://wiki.tcl-lang.org/page/Greatest+common+denominator
+proc gcd {p q} {
+    while 1 {
+        if {![set p [expr {$p % $q}]]} {return [expr {$q>0?$q:-$q}]}
+        if {![set q [expr {$q % $p}]]} {return [expr {$p>0?$p:-$p}]}
+    }
+}
+
 proc enumerate {list "i 0"} {
     set result [list]
     foreach l $list {
