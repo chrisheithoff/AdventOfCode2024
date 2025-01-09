@@ -5,22 +5,19 @@
 
 source ../aoc_library.tcl
 
-# Data structures explained:
-#  addresses (dict)  :  Return address for a given file_id
-#  sizes (dict)      :  Return size for a given file_id
-#  free_sizes (dict) :  Return size for a free block starting at given address
-#  free_addresses (list):  Sorted list of free blocks starting addresses.
-
+# The data structures explained:
+#  addresses (dict)     :  Address for a given file_id
+#  sizes (dict)         :  Size of a given file_id
+#  free (list of lists) :  Free blocks in order.  Each sublist is {address size}
 
 proc part2 {input_file} {
-    global addresses sizes free_sizes free_addresses
+    global addresses sizes free 
     set data  [exec cat $input_file]
 
     # Initialize 
     set addresses      [dict create]
     set sizes          [dict create]
-    set free_sizes     [dict create]
-    set free_addresses [list]
+    set free           [list]
     set pointer 0
     set file_id -1
 
@@ -37,8 +34,7 @@ proc part2 {input_file} {
 
         # Save info about free blocks.  Skip 0-sized free space.
         if {$blank_size != "0"} {
-            dict set free_sizes $pointer $blank_size
-            lappend free_addresses $pointer
+            lappend free [list $pointer $blank_size]
             incr pointer $blank_size
         }
     }                   
@@ -53,35 +49,35 @@ proc part2 {input_file} {
 }
 
 proc defrag {file_id} {
-    global addresses sizes free_sizes free_addresses
+    global addresses sizes free
 
-    set file_size    [dict get $sizes $file_id]
+    set file_size    [dict get $sizes     $file_id]
     set file_address [dict get $addresses $file_id]
-    set num_free     [llength $free_addresses]
+    set num_free     [llength $free]
 
-    # Find the first free space to the left of the file with enough room for it.
+    # Check for free space to move the file
     for {set i 0} {$i < $num_free} {incr i} {
+        set address [lindex $free $i 0]
+        set size    [lindex $free $i 1]
 
-        set free_address [lindex $free_addresses $i]
-        if {$free_address >= $file_address} {
+        # Only move the file to the left.
+        if {$address >= $file_address} {
             break
         }
-        set free_size [dict get $free_sizes $free_address]
 
-        if {$free_size >= $file_size} {
+        # Is there enough free space?
+        if {$size >= $file_size} {
             # Move file to new address
-            dict set addresses $file_id $free_address
+            dict set addresses $file_id $address
 
             # Update free space info.
-            #   - if no leftover free space, remove from both the dict and the list
-            #   - otherwise, redefine the dict and the list with the leftover
-            if {$free_size == $file_size} {
-                dict unset free_sizes $free_address
-                set free_addresses [lreplace $free_addresses $i $i]
+            #   - if no leftover free space, remove from the list
+            #   - otherwise, redefine the list with the new address and size
+            if {$size == $file_size} {
+                set free [lreplace $free $i $i]
             } else {
-                dict unset free_sizes $free_address
-                dict set free_sizes [incr free_address $file_size] [incr free_size -$file_size]
-                set free_addresses [lreplace $free_addresses $i $i $free_address]
+                lset free $i 0 [incr address $file_size]
+                lset free $i 1 [incr size   -$file_size]
             }
 
             break
@@ -107,7 +103,7 @@ proc checksum {addresses sizes} {
 }
 
 # part2 demo.txt
-part2 input.txt
+time {part2 input.txt} 10
 
 
 
