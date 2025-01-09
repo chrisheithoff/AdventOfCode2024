@@ -6,10 +6,10 @@
 source ../aoc_library.tcl
 
 # Data structures explained:
-#  addresses (dict)      : Address for a given file_id
-#  sizes (dict)          : Size for a given file_id
-#  free_sizes (dict)     : Size for a free block starting at given address
-#  free_addresses (list) : Sorted list of free blocks starting addresses.
+#  addresses (dict)  :  Return address for a given file_id
+#  sizes (dict)      :  Return size for a given file_id
+#  free_sizes (dict) :  Return size for a free block starting at given address
+#  free_addresses (list):  Sorted list of free blocks starting addresses.
 
 
 proc part2 {input_file} {
@@ -78,11 +78,11 @@ proc defrag {file_id} {
             #   - NOTE: The lreplace is done inline with the Unshared Objects trick (http://wiki.tcl-lang.org/page/K)
             if {$free_size == $file_size} {
                 dict unset free_sizes $free_address
-                set free_addresses [lreplace [set $free_addresses {}] $i $i]
+                set free_addresses [lreplace $free_addresses[set free_addresses {}] $i $i]
             } else {
                 dict unset free_sizes $free_address
                 dict set free_sizes [incr free_address $file_size] [incr free_size -$file_size]
-                set free_addresses [lreplace [set $free_addresses {}] $i $i $free_address]
+                set free_addresses [lreplace $free_addresses[set free_addresses {}] $i $i $free_address]
             }
 
             break
