@@ -58,7 +58,7 @@ foreach d $data {
     dict incr stones $d 1
 }
 
-set num_blinks 75
+set num_blinks 250
 
 for {set i 0} {$i < $num_blinks} {incr i} {
     set stones [blink $stones]
