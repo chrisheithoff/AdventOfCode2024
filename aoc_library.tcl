@@ -162,6 +162,20 @@ proc print_grid {grid} {
     }
 }
 
+# Return the indexes that equal match.
+proc lsearch_grid {grid match} {
+
+    set matches [list]
+    foreach {r row} [enumerate $grid] {
+        foreach {c char} [enumerate $row] {
+            if {$char == $match} {
+                lappend matches [list $r $c]
+            }
+        }
+    }
+    return $matches
+}
+
 # Rotate and flip grids
 proc flip_left {grid} {
     set flipped_grid [list]
