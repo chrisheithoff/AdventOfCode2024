@@ -34,7 +34,7 @@ proc lsearch_grid {grid match} {
 }
 
 # Find the 9's that a location can lead to.
-#   Recursive proc:  The score of a trailhead is the sum of the four neighbors.
+#   Recursive proc.  
 #   Don't repeat yourself.  Use a cache (aka memoization)
 proc get_nines {grid loc} {
     global nines_per_loc
