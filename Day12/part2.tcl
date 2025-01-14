@@ -1,14 +1,15 @@
 # Advent of Code 2024.
 # Day 12: Garden groups
-# Part 1: Get the total price of fencing for all garden groups.
-#    The price = area * perimeter
+# Part 2: Get the total price of fencing for all garden groups.
+#    The price = area * num_sides.
+#       (number of sides equals number of corners)
 
 package require math::complexnumbers
 namespace import math::complexnumbers::*
 
 source ../aoc_library.tcl
 
-# set data  [exec cat demo2.txt]
+# set data  [exec cat demo.txt]
 set data  [exec cat input.txt]
 set lines [lreverse [split $data "\n"]]
 
@@ -43,30 +44,14 @@ proc get_holes {poly_rect} {
     set holes [filter_collection [get_attribute $not poly_rects] "area < $area"]
 }
 
-proc get_perimeter_of_point_list {points} {
-    set perimeter 0
-    set num_points [llength $points]
-    lappend points [lindex $points 0]
 
-    for {set i 0} {$i < $num_points} {incr i} {
-        set p1 [lindex $points $i]
-        set p2 [lindex $points $i+1]
-        incr perimeter [expr {int([mod [- $p2 $p1]])}]
-    }
-    return $perimeter
-}
+proc count_corners_of_poly_rect {poly_rect} {
+    set num_corners 0
 
-# The perimeter needs to account for holes.  
-#  - The point_list of a poly_rect will include a cut from the outside perimeter
-#    to the hole.
-proc get_perimeter_of_poly_rect {poly_rect} {
-    set perimeter 0
-
-    # Get perimeter of any holes
+    # Check holes first
     set holes [get_holes $poly_rect]
     foreach_in_collection hole $holes {
-        set hole_points [get_attribute $hole point_list]
-        incr perimeter [get_perimeter_of_point_list $hole_points]
+        incr num_corners [llength [get_attribute $hole point_list]]
     }
 
     # Get perimeter of new poly_rect with holes filled in
@@ -77,9 +62,9 @@ proc get_perimeter_of_poly_rect {poly_rect} {
         set outside_points [get_attribute $poly_rect point_list]
     }
 
-    incr perimeter [get_perimeter_of_point_list $outside_points]
+    incr num_corners [llength $outside_points]
     
-    return $perimeter
+    return $num_corners
 }
 
 
@@ -88,24 +73,24 @@ proc price_check {geo_mask} {
     set poly_rects [get_attribute $geo_mask poly_rects]
     foreach_in_collection poly_rect $poly_rects {
         set area      [expr {int([get_attribute $poly_rect area])}]
-        set perimeter [get_perimeter_of_poly_rect $poly_rect]
-        incr price    [expr {$area * $perimeter}]
-        # puts "    Area ($area) * Perimeter ($perimeter) += $price"
+        set corners   [count_corners_of_poly_rect $poly_rect]
+        incr price    [expr {$area * $corners}]
+        # puts "    Area ($area) * Corners($corners) += $price"
     }    
     return $price
 }
 
-set part1_answer 0
+set part2_answer 0
 set plant_types [lsort [dict keys $plants]]
 foreach plant_type $plant_types {
-    set origins [dict get $plants $plant_type]
     puts "$plant_type"
+    set origins [dict get $plants $plant_type]
     set geo_mask [make_geo_mask $origins]
 
-    red $geo_mask
+    [dict get $colors $plant_type] $geo_mask
 
     set price [price_check $geo_mask]
 
-    incr part1_answer $price
-    puts "   $price += $part1_answer"
+    incr part2_answer $price
+    puts "   $price += $part2_answer"
 }
