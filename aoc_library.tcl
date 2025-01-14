@@ -323,10 +323,10 @@ proc lwhere {varname list condition} {
 }
   
 proc lpop listVar {
-        upvar 1 $listVar l
-        set r [lindex $l end]
-        set l [lreplace $l[set l {}] end end] ; # Make sure [lreplace] operates on unshared object
-        return $r
+    upvar 1 $listVar l
+    set r [lindex $l end]
+    set l [lreplace $l[set l {}] end end] ; # Make sure [lreplace] operates on unshared object
+    return $r
 }
 
 proc hex2bin {hex} {
