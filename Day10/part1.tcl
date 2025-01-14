@@ -14,7 +14,7 @@ set data  [exec cat input.txt]
 set lines [split $data "\n"]
 set grid  [make_grid_from_lines $lines]
 
-# Define the cache (a list of nine locations per grid location)
+# Define the cache (a list of '9' endpoints per grid location)
 #   - key = grid location
 #   - value list of locations:  but each location will be represented as "row:col" to 
 #       avoid ambiguity between lists and lists of lists.
@@ -27,7 +27,7 @@ proc lsearch_grid {grid match} {
         foreach {c char} [enumerate $row] {
             if {$char == $match} {
                 lappend matches [list $r $c]
-            }
+        
         }
     }
     return $matches
