@@ -1,12 +1,7 @@
 # Advent of Code 2024.
 # Day 13: Claw Contraption
-# Part 1: How many times tokens must you spend to get all possible prizes?
+# Part 1: How many tokens must you spend to get all possible prizes?
 #    
-
-package require math::complexnumbers
-namespace import math::complexnumbers::*
-
-source ../aoc_library.tcl
 
 # set data  [exec cat demo.txt]
 set data  [exec cat input.txt]
